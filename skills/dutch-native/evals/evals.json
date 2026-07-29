@@ -1,61 +1,108 @@
 {
   "skill_name": "dutch-native",
+  "notes": "Mechanical checks are not graded here. `scripts/lint.py` covers em-dashes, calques, ambtenarentaal, `welke` as a relative pronoun, sentence-initial `Echter,`, date and month form, Title Case headings and variant leakage, deterministically and for free. Each case carries a `lint` block naming the variant to lint the output against; run the linter alongside the graded assertions. What is left here is what actually needs a reader: consistency, register, rhythm, and whether the text reads as composed in Dutch.",
   "evals": [
     {
       "id": 1,
       "prompt": "Schrijf een mail naar een klant in Belgisch Nederlands. De oplevering schuift twee weken op, en we willen een nieuwe afspraak voorstellen voor 21 oktober 2025.",
-      "expected_output": "A Belgian Dutch email that consistently addresses the reader with `u`, closes with `Met vriendelijke groeten`, carries at least one modal particle, and contains none of the flagged calques or mechanical errors.",
+      "expected_output": "A Belgian Dutch email that addresses the reader with `u` throughout, closes with `Met vriendelijke groeten`, carries at least one modal particle a Fleming would actually use, proposes the new date concretely, and ends with a line naming the variant.",
+      "lint": {
+        "variant": "be"
+      },
       "assertions": [
         "The email addresses the reader with `u` throughout and never switches to `je` or `jij`",
         "The closing is `Met vriendelijke groeten`, not the Netherlands form `Met vriendelijke groet`",
-        "The text contains no em-dash character (U+2014)",
-        "The text contains at least one modal particle from: wel, toch, eens, even, maar, nu, al, gewoon, hoor, zeker",
-        "The text contains none of: `teneinde`, `middels`, `dient te`, or `welke` used as a relative pronoun",
-        "No sentence begins with `Echter,`",
-        "The date is written as `21 oktober 2025`, not `oktober 21, 2025`, and the month is lowercase"
+        "At least one modal particle (wel, toch, eens, even, gewoon, zeker) appears where a Fleming would use one, rather than being bolted on",
+        "The delay is stated plainly and a concrete new date is proposed, rather than only an apology",
+        "The output ends with a line naming the variant, such as `Variant: BE`"
       ]
     },
     {
       "id": 2,
       "prompt": "Schrijf een LinkedIn-post voor de Nederlandse markt over onze nieuwe exportfunctie. Informeel, met een kop erboven.",
-      "expected_output": "A Netherlands Dutch LinkedIn post using `je`, a sentence-case heading without a full stop, varied sentence rhythm, and no AI calques.",
+      "expected_output": "A Netherlands Dutch LinkedIn post using `je`, a sentence-case heading, audibly varied rhythm, no AI calques, and a closing variant line.",
+      "lint": {
+        "variant": "nl"
+      },
       "assertions": [
         "The post addresses the reader with `je` or `jij`, not `u`",
-        "The heading is in sentence case, has no full stop, and is not Title Case",
-        "The text contains no em-dash character (U+2014)",
-        "The text contains none of: `Voel je vrij om`, `Wij zijn verheugd`, `naadloos`, `uitdagingen` used to mean problems",
-        "Sentence length varies: the shortest sentence is under 10 words and the longest is over 18 words",
+        "Sentence length varies audibly rather than settling into one length for the whole post",
         "At least two sentences open with something other than the grammatical subject",
-        "No three consecutive sentences open with the same word"
+        "The post reads as composed in Dutch: back-translating its smoothest sentence does not land on a stock English marketing phrase",
+        "The output ends with a line naming the variant, such as `Variant: NL`"
       ]
     },
     {
       "id": 3,
       "prompt": "Kan je dit even in het Nederlands zetten? \"We're excited to announce our new pricing, and we believe it will seamlessly address the challenges our customers face.\"",
-      "expected_output": "The skill asks whether the target is Belgian or Netherlands Dutch before committing to a final text, rather than silently defaulting, and does not render the English sentence word for word.",
+      "expected_output": "A finished Dutch rendering delivered without a blocking question. The variant is resolved by inference or by defaulting to BE, and the assumption is stated in one line at the end. The English is rewritten from its point, not rendered word for word.",
+      "lint": {
+        "variant": "be"
+      },
       "assertions": [
-        "The response asks which variant to use (BE or NL) before delivering the final text, rather than silently producing one variant",
-        "The output does not contain `Wij zijn verheugd aan te kondigen` or any near-literal rendering of `We're excited to announce`",
-        "The output does not contain `naadloos`, `adresseren` meaning to address a problem, or `uitdagingen` meaning problems",
-        "The output does not contain `Wij geloven dat`"
+        "A finished Dutch text is delivered without first stopping to ask which variant to use",
+        "The output ends with one line naming the variant and saying whether it was inferred or assumed, such as `Variant: BE (aangenomen)`",
+        "The English is rewritten from the point it makes, not rendered clause by clause, and the sentence count does not simply mirror the source",
+        "The announcement is stated as something that is now true, rather than as an announcement about making an announcement"
       ]
     },
     {
       "id": 4,
       "prompt": "Kan je deze tekst nakijken? Hij leest als een vertaling uit het Engels. Doelgroep is Nederland.",
-      "expected_output": "A repaired version of the file in which each of the seven structural tells present in the source has been fixed, plus a short account of what was changed and why.",
-      "files": ["evals/files/translationese.md"],
+      "expected_output": "A repaired version in which the structural tells are fixed, plus a short account of what changed and why. The mechanical defects are checked by the linter; these assertions cover the structural rewrites a regex cannot see.",
+      "files": [
+        "evals/files/translationese.md"
+      ],
+      "lint": {
+        "variant": "nl"
+      },
       "assertions": [
         "`Drie opties zijn beschikbaar` is rewritten to a presentational `er` construction such as `Er zijn drie opties`",
         "`Niets is veranderd` is rewritten to `Er is niets veranderd`",
-        "The heading `Onze Nieuwe Samenwerking` is rewritten to sentence case",
-        "The em-dash character (U+2014) is gone from the rewritten text",
-        "The sentence-initial `Echter,` is gone, replaced by `echter` in mid-sentence position or by `Maar`",
         "`wij zullen volgende week starten` is rewritten to a present tense such as `we starten volgende week`",
         "The nominalisation `Het uitvoeren van de migratie gebeurt door ons team` is rewritten to an active verb such as `ons team voert de migratie uit`",
-        "The rewritten text contains none of: `teneinde`, `welke` as a relative pronoun, `Voel je vrij om`, `naadloos`, `Wij zijn verheugd aan te kondigen`, `Wij geloven dat`",
         "`op kantoor gisteren` is reordered to `gisteren op kantoor`, following Time-Manner-Place",
         "The response names which of the seven tells it fixed"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Kan je deze Vlaamse klantenmail nalezen? Ze moet in Belgisch Nederlands blijven.",
+      "expected_output": "A review that leaves the text substantially alone. The fixture is already idiomatic Belgian Dutch, so the correct answer is to report that it holds up and to change little or nothing. This case exists to catch the opposite failure from the others: a skill that damages good Dutch to satisfy its own rules.",
+      "files": [
+        "evals/files/native-be.md"
+      ],
+      "lint": {
+        "variant": "be"
+      },
+      "assertions": [
+        "The response does not replace Belgian vocabulary with Netherlands equivalents: `onthaal`, `opvolgen` and the `u` form survive, and none becomes `receptie`, `volgen` or `je`",
+        "The closing `Met vriendelijke groeten` is not changed to `Met vriendelijke groet`",
+        "No modal particle is added purely to raise the count, and none of the existing ones is removed",
+        "The response reports that the text is already idiomatic rather than inventing problems, and proposes at most a small number of genuine improvements"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Deze mail is uit het Engels vertaald en loopt voor geen meter. Kan je er Nederlands van maken dat een collega ook echt zo zou schrijven? Doelgroep is Nederland.",
+      "expected_output": "A rewrite that keeps the message and throws away the English scaffolding. Every sentence in the source is grammatical Dutch, so nothing here is a spelling or grammar fix: the whole defect is idiom carried across word for word. The rewrite should be visibly shorter, because most of the source is filler that only exists in English business correspondence.",
+      "files": [
+        "evals/files/letterlijk.md"
+      ],
+      "lint": {
+        "variant": "nl"
+      },
+      "assertions": [
+        "The opening `Ik hoop dat deze mail je goed vindt` is gone entirely, not translated differently, and the mail opens on its actual subject",
+        "`de basis aanraken`, `op dezelfde pagina zitten`, `voortbewegen`, `de bal ligt in jouw kamp` and `offline nemen` are all replaced by things a Dutch speaker says, not by closer translations of the same English images",
+        "`in termen van`, `bandbreedte` and `comfortabel zijn met` are replaced by ordinary Dutch such as `qua`, `tijd` and `akkoord gaan met`",
+        "`opgewonden` is gone: it does not mean `excited` in this register and its survival is the single clearest sign the rewrite was superficial",
+        "`de laaghangende vruchten`, `dieper duiken` and `game changer` are replaced by plain statements of what is actually meant",
+        "`Ik waardeer je tijd en kijk ernaar uit om van jou te horen` is replaced by a normal Dutch closing such as `Laat maar weten wat je ervan denkt`",
+        "The rewrite is meaningfully shorter than the source, because the English politeness scaffolding carries no information",
+        "The result reads as composed in Dutch: no sentence maps one to one onto an English sentence of similar length",
+        "The concrete content survives: the timing problem, the request for a call, and who is expected to act next",
+        "The output ends with a line naming the variant, such as `Variant: NL`"
       ]
     }
   ]

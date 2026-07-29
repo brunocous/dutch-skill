@@ -8,6 +8,36 @@ A portable skill that makes LLMs write Dutch instead of translating English into
 
 Language models compose in English and render into Dutch. The result is grammatical and still obviously foreign: no modal particles, missing `er`, `zullen` everywhere, nominalised verbs, English adverb order, calqued prepositions. Spelling checkers do not catch any of this, because none of it is a spelling error.
 
+## What it looks like
+
+Every sentence on the left is correct Dutch. A spelling checker passes all of it. It is still not something anyone would write.
+
+**Before** ([`evals/files/letterlijk.md`](skills/dutch-native/evals/files/letterlijk.md)):
+
+> Ik hoop dat deze mail je goed vindt.
+>
+> Ik wilde even de basis aanraken over het project waar we vorige week over spraken. Ik denk dat we op dezelfde pagina moeten zitten voordat we voortbewegen, want aan het einde van de dag is het de klant die de rekening betaalt.
+>
+> In termen van de planning: we hebben momenteel geen bandbreedte om dit voor het einde van de maand op te pakken. Ik ben ok met dat, maar ik wil er zeker van zijn dat jij ook comfortabel bent met de timing.
+>
+> Wij zijn erg opgewonden over waar dit naartoe gaat. Als we de laaghangende vruchten eerst plukken, denk ik dat we een echte game changer in handen hebben.
+>
+> Ik waardeer je tijd en kijk ernaar uit om van jou te horen.
+
+**After:**
+
+> Even over het project van vorige week. Voor we verder gaan wil ik zeker weten dat we hetzelfde voor ogen hebben, want uiteindelijk is het de klant die betaalt.
+>
+> Qua planning: we krijgen dit deze maand niet meer rond. Dat is wat mij betreft geen probleem, maar ik wil wel weten of jij daarmee uit de voeten kunt.
+>
+> Als we beginnen met wat er voor het rapen ligt, scheelt dat later een hoop werk. De cijfers neem ik graag een keer rustig met je door.
+>
+> Zullen we volgende week even bellen? Laat maar weten wat jou schikt.
+
+Three things to notice. `Ik hoop dat deze mail je goed vindt` is not translated, it is deleted: the sentence exists only because English business mail needs a runway. `opgewonden` is not what `excited` means in this register. And the rewrite is a third shorter, because the politeness scaffolding carried no information.
+
+`python3 scripts/lint.py` counts 16 errors in the first and none in the second.
+
 ## Layout
 
 The repo follows the [openai/plugins](https://github.com/openai/plugins) convention: the skill lives at `skills/<name>/SKILL.md` and the manifests sit beside it.
@@ -99,9 +129,20 @@ Paste `SKILL.md` at the top of the conversation. Append `references/be-nl.md` to
 
 Seeing the skill trigger only tells you Claude found it. Whether the output is actually better than the same model with no skill is a separate question, and the only way to answer it is a baseline comparison: run each prompt twice, once with the skill and once without, and compare.
 
-`skills/dutch-native/evals/evals.json` holds four test cases in the [skill-creator format](https://agentskills.io/skill-creation/evaluating-skills): a BE email, an NL LinkedIn post, an unspecified-variant prompt that the skill should answer by *asking*, and a repair pass over `evals/files/translationese.md`, a fixture that deliberately contains every one of the seven structural tells.
+`skills/dutch-native/evals/evals.json` holds six test cases in the [skill-creator format](https://agentskills.io/skill-creation/evaluating-skills):
 
-The assertions are deliberately mechanical, because that is what this skill claims to fix. `"Drie opties zijn beschikbaar is rewritten to an er construction"` can be graded; `"the Dutch sounds natural"` cannot.
+| # | What it tests |
+| --- | --- |
+| 1 | A BE email: `u` throughout, Flemish closing, a modal particle that earns its place |
+| 2 | An NL LinkedIn post: `je`, sentence-case heading, audible rhythm |
+| 3 | An unspecified variant: resolve it and say so, without blocking on a question |
+| 4 | Repairing `translationese.md`, which carries all seven structural tells |
+| 5 | Reviewing `native-be.md`, which is already good. The right answer is to leave it alone |
+| 6 | Rewriting `letterlijk.md`, grammatical Dutch that is pure English idiom |
+
+Case 5 is the one most eval suites lack. Every other case rewards finding defects, which is exactly the pressure that makes a skill invent them. Case 5 fails if the model "corrects" idiomatic Flemish into Netherlands Dutch, or pads a clean text with particles to hit a quota.
+
+**Mechanical assertions are not graded by a model.** Roughly half of what this skill promises is a string operation, and paying a language model to decide whether a text contains an em-dash is slower, costs money and is less accurate than a one-line string comparison. Those checks live in `scripts/lint.py` and run offline and free. Each eval case carries a `lint` block naming the variant to lint its output against. What is left in `assertions` is only what needs a reader: consistency, register, rhythm, and whether the text reads as composed in Dutch.
 
 To run the loop:
 
@@ -118,6 +159,31 @@ Two things to watch when reading results, both from the guidance in that doc:
 - An assertion that fails in both arms is usually a broken assertion, not a hard test case.
 
 The cases here are a starting point and have not been run against a benchmark yet, so no pass rates are claimed.
+
+## The linter
+
+```bash
+python3 scripts/lint.py draft.md               # variant inferred from marker words
+python3 scripts/lint.py --variant be draft.md
+python3 scripts/lint.py --json draft.md
+python3 scripts/lint.py --self-test
+```
+
+Section 8 of the skill is a review loop written as grep steps. This is that loop as code. It grades *output*, so it works on text from any model, and on text a person wrote.
+
+```text
+skills/dutch-native/evals/files/letterlijk.md, variant: NL
+  ! L3    letterlijk vertaald idioom: 'hoop dat deze mail je goed vindt'  -> schrap het, begin bij je punt
+  ! L5    calque: 'aan het einde van de dag'  -> uiteindelijk
+  ! L5    letterlijk vertaald idioom: 'op dezelfde pagina'  -> het eens zijn
+  ! L7    letterlijk vertaald idioom: 'bandbreedte'  -> tijd, ruimte
+  ? L9    naamwoordstijl: 'het uitvoeren van'  -> T4: use the verb
+16 fout(en), 1 waarschuwing(en).
+```
+
+`!` is an error: deterministic, high confidence, a hit is a defect. `?` is a warning: a heuristic worth a look, never a build failure. Rules that cannot tell native Dutch from translationese are warnings or they are deleted.
+
+**How the rules are tested.** `--self-test` runs every rule against four committed fixtures and requires them to separate: `translationese.md` and `letterlijk.md` must trigger, `native-be.md` and `native-nl.md` must stay silent. The second half is the part that matters. Without a known-good fixture, a regex that silently stopped matching looks exactly like text that has no defects. `scripts/validate.py` runs the self-test, so CI covers it.
 
 ## Design constraints
 
@@ -138,7 +204,9 @@ No dependencies, and CI runs the same script, so a green local run means a green
 - the `SKILL.md` body stays inside the 8000-character Custom GPT budget, counted in characters
 - the frontmatter carries `name` and `description`, and `name` matches the directory
 - every file the skill and the evals point at actually exists
-- no stray em-dash in `SKILL.md`, `README.md` or `CHANGELOG.md`, since the skill bans them
+- no stray em-dash in the prose this repo ships, including `references/` and the fixtures, since the skill bans them. `translationese.md` is exempt: it carries one on purpose
+- every eval case names the variant to lint its output against, so a case cannot silently go unlinted
+- `scripts/lint.py` passes its self-test, which is what stops a rule from rotting into silence
 
 CI also builds the claude.ai upload zip on every run and checks that `SKILL.md` lands at `dutch-native/SKILL.md` inside it, so the upload instructions cannot rot.
 
@@ -156,4 +224,39 @@ Note that vrttaal.net stopped being updated and VRT now refers to Team Taaladvie
 
 ## Contributing
 
-Useful contributions are counterexamples: a Dutch sentence this skill judges wrong that a native speaker would write, or a translationese pattern the seven tells do not catch. Open an issue with the pair.
+**The bar first, so nobody wastes an evening.** A rule earns space in `SKILL.md` only if it changes what a model writes. `SKILL.md` has about 86 characters of headroom against the Custom GPT budget, so every addition is really a swap, and "this is also true" is not an argument for including something.
+
+The most useful contribution is a counterexample, and it now has a shape:
+
+- **The skill flagged something a native would write.** That is a false positive, and it is the more valuable kind. Run `python3 scripts/lint.py --variant be yourtext.md`, paste the output, and say what you would have written. If a lint rule caused it, that rule is wrong until proven otherwise.
+- **The skill missed a pattern.** Add the sentence to `evals/files/letterlijk.md` or `translationese.md`, or open an issue with the prompt, what the model wrote, and what a Fleming or Nederlander would have written instead.
+
+Where a fix belongs, since there are four surfaces and it is not obvious:
+
+| It is... | It goes in |
+| --- | --- |
+| a fixed English phrase rendered word for word | `IDIOMS` or `CALQUES` in `scripts/lint.py` |
+| a word that is BE or NL but not both | `references/be-nl.md` |
+| a loanword the keep/translate rule gets wrong | section 5 of `SKILL.md` |
+| a whole-text behaviour, not a word | a new case in `evals/evals.json` |
+
+Anything added to `lint.py` must pass `--self-test`: it has to fire on the translationese fixtures and stay silent on the native ones. That is the whole quality bar for a rule, and it is deliberately hard to pass.
+
+## Corpus
+
+`scripts/scrape.py` pulls the two sources this skill can use, and deliberately skips the roughly 5,900 remaining advice pages on vlaanderen.be, which are a lookup table rather than skill content.
+
+```bash
+python3 scripts/scrape.py            # all three
+python3 scripts/scrape.py --only labels
+```
+
+| Source | What | Licence |
+| --- | --- | --- |
+| vlaanderen.be spellingregels | 57 rule pages | free reuse, art. II.55 Bestuursdecreet |
+| vlaanderen.be tips | 33 clarity pages | free reuse |
+| taaladvies.net | BE/NL usage labels for 399 lemmas | all rights reserved: facts only |
+
+Output lands in `data/`, which is gitignored, and **nothing is written into `references/` automatically.** Two reasons. Advice pages are built out of imperative sentences, so scraped prose distilled into a reference file becomes a standing instruction the skill carries forever. And taaladvies.net is all rights reserved, so only the fact (lemma, regional status, source URL) may be kept, never the Vraag/Antwoord body. Promotion into `references/` is a human step, tables only.
+
+One finding worth recording, because it contradicts the reason the scrape was written: the 399 regionally labelled lemmas are mostly *contested* words, which is a different distribution from *common* ones. `captatiewagen`, `ei zo na` and `bedampte ruiten` will never appear in a LinkedIn post, while the words that actually mark a text as Flemish, `gsm`, `verlof`, `onthaal`, `opvolgen`, were already in the hand-written `references/be-nl.md`. The corpus is kept for reference, but it did not earn a place in the skill.
