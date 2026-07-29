@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate skill and manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The same script contributors run locally, so a green local run means a
+      # green CI run.
+      - name: Run checks
+        run: python3 scripts/validate.py
+
+  package:
+    name: Build the claude.ai upload zip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The README tells readers to upload a zip to claude.ai with the skill
+      # folder at the zip root. Building it here proves those instructions still
+      # work, and gives reviewers an artifact to test with.
+      - name: Build zip
+        run: |
+          cd skills
+          zip -r ../dutch-native.zip dutch-native
+          cd ..
+          unzip -l dutch-native.zip
+
+      - name: Verify SKILL.md sits under the folder at the zip root
+        run: |
+          if ! unzip -l dutch-native.zip | grep -q 'dutch-native/SKILL.md'; then
+            echo "SKILL.md is not at dutch-native/SKILL.md inside the zip"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dutch-native-skill
+          path: dutch-native.zip

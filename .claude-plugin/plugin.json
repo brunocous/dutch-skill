@@ -1,0 +1,12 @@
+{
+  "name": "dutch-native",
+  "description": "Write Dutch that was composed in Dutch, not translated from English. Covers Belgian (BE) and Netherlands (NL) localisation.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Bruno Coussement"
+  },
+  "homepage": "https://github.com/brunocous/dutch-skill",
+  "repository": "https://github.com/brunocous/dutch-skill",
+  "license": "CC-BY-4.0",
+  "keywords": ["dutch", "nederlands", "vlaams", "writing", "localisation", "translationese"]
+}

@@ -1,0 +1,62 @@
+{
+  "skill_name": "dutch-native",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Schrijf een mail naar een klant in Belgisch Nederlands. De oplevering schuift twee weken op, en we willen een nieuwe afspraak voorstellen voor 21 oktober 2025.",
+      "expected_output": "A Belgian Dutch email that consistently addresses the reader with `u`, closes with `Met vriendelijke groeten`, carries at least one modal particle, and contains none of the flagged calques or mechanical errors.",
+      "assertions": [
+        "The email addresses the reader with `u` throughout and never switches to `je` or `jij`",
+        "The closing is `Met vriendelijke groeten`, not the Netherlands form `Met vriendelijke groet`",
+        "The text contains no em-dash character (U+2014)",
+        "The text contains at least one modal particle from: wel, toch, eens, even, maar, nu, al, gewoon, hoor, zeker",
+        "The text contains none of: `teneinde`, `middels`, `dient te`, or `welke` used as a relative pronoun",
+        "No sentence begins with `Echter,`",
+        "The date is written as `21 oktober 2025`, not `oktober 21, 2025`, and the month is lowercase"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Schrijf een LinkedIn-post voor de Nederlandse markt over onze nieuwe exportfunctie. Informeel, met een kop erboven.",
+      "expected_output": "A Netherlands Dutch LinkedIn post using `je`, a sentence-case heading without a full stop, varied sentence rhythm, and no AI calques.",
+      "assertions": [
+        "The post addresses the reader with `je` or `jij`, not `u`",
+        "The heading is in sentence case, has no full stop, and is not Title Case",
+        "The text contains no em-dash character (U+2014)",
+        "The text contains none of: `Voel je vrij om`, `Wij zijn verheugd`, `naadloos`, `uitdagingen` used to mean problems",
+        "Sentence length varies: the shortest sentence is under 10 words and the longest is over 18 words",
+        "At least two sentences open with something other than the grammatical subject",
+        "No three consecutive sentences open with the same word"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Kan je dit even in het Nederlands zetten? \"We're excited to announce our new pricing, and we believe it will seamlessly address the challenges our customers face.\"",
+      "expected_output": "The skill asks whether the target is Belgian or Netherlands Dutch before committing to a final text, rather than silently defaulting, and does not render the English sentence word for word.",
+      "assertions": [
+        "The response asks which variant to use (BE or NL) before delivering the final text, rather than silently producing one variant",
+        "The output does not contain `Wij zijn verheugd aan te kondigen` or any near-literal rendering of `We're excited to announce`",
+        "The output does not contain `naadloos`, `adresseren` meaning to address a problem, or `uitdagingen` meaning problems",
+        "The output does not contain `Wij geloven dat`"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Kan je deze tekst nakijken? Hij leest als een vertaling uit het Engels. Doelgroep is Nederland.",
+      "expected_output": "A repaired version of the file in which each of the seven structural tells present in the source has been fixed, plus a short account of what was changed and why.",
+      "files": ["evals/files/translationese.md"],
+      "assertions": [
+        "`Drie opties zijn beschikbaar` is rewritten to a presentational `er` construction such as `Er zijn drie opties`",
+        "`Niets is veranderd` is rewritten to `Er is niets veranderd`",
+        "The heading `Onze Nieuwe Samenwerking` is rewritten to sentence case",
+        "The em-dash character (U+2014) is gone from the rewritten text",
+        "The sentence-initial `Echter,` is gone, replaced by `echter` in mid-sentence position or by `Maar`",
+        "`wij zullen volgende week starten` is rewritten to a present tense such as `we starten volgende week`",
+        "The nominalisation `Het uitvoeren van de migratie gebeurt door ons team` is rewritten to an active verb such as `ons team voert de migratie uit`",
+        "The rewritten text contains none of: `teneinde`, `welke` as a relative pronoun, `Voel je vrij om`, `naadloos`, `Wij zijn verheugd aan te kondigen`, `Wij geloven dat`",
+        "`op kantoor gisteren` is reordered to `gisteren op kantoor`, following Time-Manner-Place",
+        "The response names which of the seven tells it fixed"
+      ]
+    }
+  ]
+}
