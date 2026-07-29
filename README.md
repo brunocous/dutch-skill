@@ -33,7 +33,7 @@ Note that vrttaal.net stopped being updated and VRT now refers to Team Taaladvie
 
 ## Licence
 
-CC BY 4.0.
+[CC BY 4.0](LICENSE). Use it, adapt it, ship it commercially. Just credit "dutch-native by Bruno Coussement" with a link to this repo, and say if you changed anything.
 
 ## Contributing
 
