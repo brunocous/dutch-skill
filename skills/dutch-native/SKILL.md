@@ -8,11 +8,20 @@ license: CC BY 4.0
 
 Language models compose in English and render into Dutch. The output is grammatical and still obviously foreign. This skill targets the rendering step.
 
-## 0. Pick a variant first
+## 0. Variant and preferences
 
-Ask or infer once: **BE** or **NL**. Write it down. Never mix inside one text. If unknown, ask. Do not default silently.
+Resolve the variant in this order. Never block on a question: this skill fires inside subagents and one-shot calls where nobody can answer.
+
+1. An explicit instruction in the prompt.
+2. A `## Projectvoorkeuren` block, or the project instructions.
+3. Inference from the text: `gsm` and `omdat ik dat gezien heb` are BE, `mobieltje` and `omdat ik dat heb gezien` are NL.
+4. Default to **BE**.
+
+Never mix variants inside one text. Close with one line, `Variant: BE (aangenomen)`, naming what you used and whether you were told or assumed. It is also the only proof the skill loaded.
 
 Register default: BE leans one notch more formal than NL. In BE, `u` is safe with a stranger. In NL, `je` is normal in business writing and `u` can read as cold.
+
+A `## Projectvoorkeuren` block outranks sections 0, 5 and 6. Keys: `variant`, `aanspreking`, `leenwoorden`, `verboden`.
 
 ## 1. The generation rule
 
@@ -52,7 +61,7 @@ Search for `-ing van`, `het -en van`, `de uitvoering`, `de realisatie`, `de opti
 Also: `Echter, dit werkt niet.` is an English comma-adverb. Write `Dit werkt echter niet.` or `Maar dit werkt niet.`
 
 **T6. Calqued prepositions.** Dutch verbs carry fixed prepositions that English does not predict.
-`wachten op` (niet *voor*) · `zoeken naar` · `vragen naar, vragen om` · `bestaan uit` · `deelnemen aan` · `twijfelen aan` · `discussiëren over` · `afhangen van` · `verantwoordelijk voor` · `geïnteresseerd in` · `voorzien van` (uitrusten) vs `voorzien in` (invullen)
+`wachten op` (niet *voor*) · `zoeken naar` · `bestaan uit` · `deelnemen aan` · `afhangen van` · `verantwoordelijk voor` · `geïnteresseerd in` · `voorzien van` (uitrusten) vs `voorzien in` (invullen)
 
 **T7. Flat rhythm.** Every sentence 12 to 18 words, every one opening with the subject. Vary from 6 to 25 and never open three sentences in a row the same way.
 
@@ -67,10 +76,8 @@ Also: `Echter, dit werkt niet.` is an English comma-adverb. Write `Dit werkt ech
 | --- | --- |
 | Voel je vrij om contact op te nemen | Laat gerust iets weten |
 | Wij zijn verheugd aan te kondigen | Vanaf vandaag kan je... |
-| Maak zeker dat | Zorg dat, let erop dat |
 | het probleem adresseren | het probleem aanpakken |
 | impacteren | gevolgen hebben voor |
-| Aan het einde van de dag | Uiteindelijk |
 | Wij geloven dat | (schrap, zeg wat je doet) |
 | naadloos | zonder gedoe, je merkt er niets van |
 | uitdagingen | problemen, knelpunten |
@@ -82,7 +89,7 @@ Back-translation test: render a smooth Dutch sentence word for word into English
 
 Style guides tell you to replace English loanwords. In tech and business writing that produces text that is artificial in the other direction. No developer says `terugkoppeling` or `gegevensbank`.
 
-**Keep:** feedback · deadline · meeting · call · budget · issue · release · deployment · backlog · sprint · dashboard · software · database · website · tool · template · workshop · demo · scope · roadmap · stakeholder · compliance · audit
+**Keep:** feedback · deadline · meeting · call · budget · issue · release · deployment · backlog · sprint · dashboard · software · database · website · tool · template · demo · scope · roadmap · stakeholder
 
 **Translate, because the English is affectation:** `cancellen` → annuleren · `checken` → nakijken · `fixen` → oplossen · `updaten` → bijwerken · `alignen` → afstemmen · `challengen` → in vraag stellen · `sharen` → delen
 
@@ -99,9 +106,7 @@ Full lists in `references/be-nl.md`. The load-bearing differences:
 | volgorde bijzin | `omdat ik dat gezien heb` | `omdat ik dat heb gezien` |
 | ontkende noodzaak | `Je moet dat niet doen` | `Je hoeft dat niet te doen` |
 | telefoon | gsm | mobiel, mobieltje |
-| vrije dagen | verlof | vakantie, vrij |
 | dossier volgen | opvolgen | volgen, monitoren |
-| balie | onthaal | receptie |
 | intensiteit | heel, echt | hartstikke, ontzettend, prima |
 
 Models default to NL, because NL dominates the training data. Flemish text that slips into `leuk`, `hartstikke`, `prima`, `best wel`, `zo meteen`, `mobieltje` was not written by a Fleming.
@@ -123,7 +128,7 @@ Belgicisms to avoid in either variant of written standard Dutch: `goesting`, `ku
 
 Run in order. Stop at the first failure, fix, restart.
 
-1. Variant declared and consistent? `u`/`je` consistent throughout?
+1. Variant line present and consistent? `u`/`je` consistent throughout?
 2. Grep for the em-dash character. Zero hits.
 3. Grep `welke`, `teneinde`, `middels`, `dient te`, `er wordt`, `Echter,`.
 4. Count modal particles. Fewer than one per paragraph means T1.
@@ -134,6 +139,4 @@ Run in order. Stop at the first failure, fix, restart.
 
 ## Sources and status
 
-Rules follow the consensus of Taaladvies.net (Taalunie, Onze Taal, INT, Team Taaladvies) and the VRT Taalcharter, restated in this skill's own words. No text is copied from those sources. Where they disagree with this file, they win.
-
-The BE/NL sections describe usage tendencies, not correctness. Both are standard Dutch.
+Rules restate the consensus of Taaladvies.net and Team Taaladvies in this skill's own words. No text is copied. Where they disagree with this file, they win. The BE/NL sections describe usage tendencies, not correctness. Both are standard Dutch.

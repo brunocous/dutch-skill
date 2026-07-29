@@ -1,6 +1,6 @@
 {
   "name": "dutch-native",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Write Dutch that was composed in Dutch, not translated from English. Covers Belgian (BE) and Netherlands (NL) localisation.",
   "author": {
     "name": "Bruno Coussement",

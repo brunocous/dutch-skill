@@ -11,9 +11,12 @@ budget, and the skill bans a character that is invisible in review.
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import re
 import sys
+import textwrap
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -60,14 +63,18 @@ def split_frontmatter(text: str) -> tuple[str, str]:
     return parts[1], parts[2].lstrip("\n")
 
 
-def check_manifests() -> None:
+def check_manifests() -> str | None:
     claude_plugin = load_json(".claude-plugin/plugin.json")
     claude_market = load_json(".claude-plugin/marketplace.json")
     codex_plugin = load_json(".codex-plugin/plugin.json")
     codex_market = load_json(".agents/plugins/marketplace.json")
 
+    # A missing manifest already failed in load_json. Return early, but say so:
+    # otherwise check_changelog receives None and silently skips the
+    # version-agreement check, so one missing file disables an unrelated check.
     if not all([claude_plugin, claude_market, codex_plugin, codex_market]):
-        return
+        note("manifests incomplete, so the changelog version check is skipped")
+        return None
 
     # Every manifest must agree on the plugin name, or one host installs
     # something the other cannot find.
@@ -153,11 +160,19 @@ def check_skill() -> None:
 def check_no_em_dash() -> None:
     """The skill bans em-dashes in Dutch output, so the repo should not ship them.
 
-    The eval fixture is exempt: it contains an em-dash on purpose, as something
-    the skill is supposed to remove.
+    Scans the prose the project itself ships, including the reference file and
+    the native fixtures. `translationese.md` is exempt: it carries an em-dash on
+    purpose, as something the skill is supposed to remove.
     """
     exempt = {SKILL_DIR / "evals" / "files" / "translationese.md"}
-    for path in [SKILL_MD, ROOT / "README.md", ROOT / "CHANGELOG.md"]:
+    candidates = [
+        SKILL_MD,
+        ROOT / "README.md",
+        ROOT / "CHANGELOG.md",
+        SKILL_DIR / "references" / "be-nl.md",
+    ]
+    candidates += sorted((SKILL_DIR / "evals" / "files").glob("*.md"))
+    for path in candidates:
         if not path.exists() or path in exempt:
             continue
         text = path.read_text(encoding="utf-8")
@@ -195,8 +210,42 @@ def check_evals() -> None:
             # Paths are written relative to the skill dir.
             if not (SKILL_DIR / ref).exists():
                 fail(f"evals/evals.json: case {cid} references missing file '{ref}'")
+        # Mechanical checks live in lint.py, so every case must say which
+        # variant to lint its output against. Without it a reader cannot tell
+        # whether a case was meant to be linted or was simply forgotten.
+        variant = case.get("lint", {}).get("variant")
+        if variant not in ("be", "nl"):
+            fail(
+                f"evals/evals.json: case {cid} needs a lint block with "
+                f"variant 'be' or 'nl' (got {variant!r})"
+            )
 
     note(f"evals: {len(cases)} cases, {sum(len(c.get('assertions', [])) for c in cases)} assertions")
+
+
+def check_lint_self_test() -> None:
+    """The graders are code, so CI runs their tests.
+
+    Without this, a rule that silently stopped matching would look exactly like
+    text that has no defects.
+    """
+    lint_path = ROOT / "scripts" / "lint.py"
+    if not lint_path.exists():
+        fail("scripts/lint.py: missing")
+        return
+    sys.path.insert(0, str(ROOT / "scripts"))
+    try:
+        import lint  # noqa: E402
+    except Exception as exc:  # pragma: no cover
+        fail(f"scripts/lint.py: does not import ({exc})")
+        return
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        ok = lint.self_test()
+    if not ok:
+        fail("scripts/lint.py: self-test failed\n" + textwrap.indent(buf.getvalue(), "      "))
+    else:
+        note("lint self-test: fixtures separate translationese from native Dutch")
 
 
 def check_changelog(version: str | None) -> None:
@@ -221,6 +270,7 @@ def main() -> int:
     check_skill()
     check_no_em_dash()
     check_evals()
+    check_lint_self_test()
     check_changelog(version)
 
     for msg in notes:
