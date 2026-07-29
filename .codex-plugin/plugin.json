@@ -1,0 +1,27 @@
+{
+  "name": "dutch-native",
+  "version": "1.0.0",
+  "description": "Write Dutch that was composed in Dutch, not translated from English. Covers Belgian (BE) and Netherlands (NL) localisation.",
+  "author": {
+    "name": "Bruno Coussement",
+    "url": "https://github.com/brunocous"
+  },
+  "homepage": "https://github.com/brunocous/dutch-skill",
+  "repository": "https://github.com/brunocous/dutch-skill",
+  "license": "CC-BY-4.0",
+  "keywords": ["dutch", "nederlands", "vlaams", "writing", "localisation", "translationese"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Dutch native",
+    "shortDescription": "Dutch that reads as Dutch, not as translated English",
+    "longDescription": "Language models compose in English and render into Dutch. The output is grammatical and still obviously foreign: no modal particles, missing er, zullen everywhere, nominalised verbs, English adverb order, calqued prepositions. This skill targets the rendering step, and handles Belgian and Netherlands localisation separately.",
+    "developerName": "Bruno Coussement",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/brunocous/dutch-skill",
+    "defaultPrompt": [
+      "Schrijf een mail naar een klant in Belgisch Nederlands over de vertraagde oplevering.",
+      "Kijk deze Nederlandse tekst na, hij leest als een vertaling uit het Engels."
+    ]
+  }
+}
