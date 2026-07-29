@@ -1,5 +1,7 @@
 # dutch-native
 
+[![CI](https://github.com/brunocous/dutch-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/brunocous/dutch-skill/actions/workflows/ci.yml)
+
 A portable skill that makes LLMs write Dutch instead of translating English into Dutch. Covers Belgian and Netherlands localisation.
 
 ## The problem it targets
@@ -79,7 +81,9 @@ zip -r dutch-native.zip dutch-native -x '*.git*'
 
 ### ChatGPT Custom GPT
 
-The instruction box caps at 8000 characters. Paste everything in `skills/dutch-native/SKILL.md` **below** the YAML frontmatter: that is 7749 characters and fits unmodified. The frontmatter is only there for agents that read it, and pasting it costs you 340 characters you need.
+The instruction box caps at 8000 characters. Paste everything in `skills/dutch-native/SKILL.md` **below** the YAML frontmatter: that is 7664 characters and fits unmodified. The whole file is 8005 characters and does not fit, and the frontmatter it would spend those 341 characters on is only there for agents that read it.
+
+Count characters, not bytes. The skill contains `ë`, `ï`, `€` and `→`, so the byte length overstates it by 84 and can talk you out of a paste that would have fitted. `scripts/validate.py` enforces the character budget on every push.
 
 Upload `skills/dutch-native/references/be-nl.md` under Knowledge.
 
@@ -121,6 +125,24 @@ The cases here are a starting point and have not been run against a benchmark ye
 - Every rule is checkable. No rule says "write naturally".
 - The review loop in section 8 is greppable, so it survives being run by a weaker model.
 - Rules only. No copied text from any advice site.
+
+## Checks and releases
+
+```bash
+python3 scripts/validate.py
+```
+
+No dependencies, and CI runs the same script, so a green local run means a green CI run. It checks what is easy to break without noticing:
+
+- the four manifests agree on the plugin name and version
+- the `SKILL.md` body stays inside the 8000-character Custom GPT budget, counted in characters
+- the frontmatter carries `name` and `description`, and `name` matches the directory
+- every file the skill and the evals point at actually exists
+- no stray em-dash in `SKILL.md`, `README.md` or `CHANGELOG.md`, since the skill bans them
+
+CI also builds the claude.ai upload zip on every run and checks that `SKILL.md` lands at `dutch-native/SKILL.md` inside it, so the upload instructions cannot rot.
+
+To release, bump the version in all three manifests, move the `Unreleased` entries into a new section in [CHANGELOG.md](CHANGELOG.md), and push a `v<version>` tag. The release workflow refuses a tag that disagrees with the manifests, then publishes the zip with that section as the release notes.
 
 ## Sources
 

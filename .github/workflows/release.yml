@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish the skill zip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run checks
+        run: python3 scripts/validate.py
+
+      # A tag that disagrees with the manifests would ship a plugin whose
+      # version does not match the release it came from.
+      - name: Check the tag matches the manifests
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          MANIFEST=$(python3 -c "import json;print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          if [ "$TAG" != "$MANIFEST" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match manifest version $MANIFEST"
+            echo "Bump the manifests and CHANGELOG.md, then retag."
+            exit 1
+          fi
+
+      - name: Build zip
+        run: |
+          cd skills
+          zip -r ../dutch-native.zip dutch-native
+
+      # Pull this release's section out of the CHANGELOG so the release notes
+      # and the changelog cannot drift.
+      - name: Extract release notes
+        run: |
+          python3 - <<'PY' > release-notes.md
+          import os, re, pathlib
+          tag = os.environ["GITHUB_REF_NAME"].lstrip("v")
+          text = pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8")
+          # Stop at the next release heading, or at the link-definition block
+          # that Keep a Changelog puts at the end of the file.
+          match = re.search(
+              rf"^##\s*\[{re.escape(tag)}\].*?$(.*?)(?=^##\s*\[|^\[[^\]]+\]:\s|\Z)",
+              text, re.MULTILINE | re.DOTALL,
+          )
+          print((match.group(1).strip() if match else f"See CHANGELOG.md for {tag}."))
+          PY
+          cat release-notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dutch-native.zip
+          body_path: release-notes.md
