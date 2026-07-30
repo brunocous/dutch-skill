@@ -6,8 +6,8 @@
     "name": "Bruno Coussement",
     "url": "https://github.com/brunocous"
   },
-  "homepage": "https://github.com/brunocous/dutch-skill",
-  "repository": "https://github.com/brunocous/dutch-skill",
+  "homepage": "https://github.com/brunocous/dutch-native",
+  "repository": "https://github.com/brunocous/dutch-native",
   "license": "CC-BY-4.0",
   "keywords": ["dutch", "nederlands", "vlaams", "writing", "localisation", "translationese"],
   "skills": "./skills/",
@@ -18,7 +18,7 @@
     "developerName": "Bruno Coussement",
     "category": "Productivity",
     "capabilities": ["Read", "Write"],
-    "websiteURL": "https://github.com/brunocous/dutch-skill",
+    "websiteURL": "https://github.com/brunocous/dutch-native",
     "defaultPrompt": [
       "Schrijf een mail naar een klant in Belgisch Nederlands over de vertraagde oplevering.",
       "Kijk deze Nederlandse tekst na, hij leest als een vertaling uit het Engels."
