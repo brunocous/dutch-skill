@@ -1,6 +1,6 @@
 # dutch-native
 
-[![CI](https://github.com/brunocous/dutch-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/brunocous/dutch-skill/actions/workflows/ci.yml)
+[![CI](https://github.com/brunocous/dutch-native/actions/workflows/ci.yml/badge.svg)](https://github.com/brunocous/dutch-native/actions/workflows/ci.yml)
 
 A portable skill that makes LLMs write Dutch instead of translating English into Dutch. Covers Belgian and Netherlands localisation.
 
@@ -43,7 +43,7 @@ Three things to notice. `Ik hoop dat deze mail je goed vindt` is not translated,
 The repo follows the [openai/plugins](https://github.com/openai/plugins) convention: the skill lives at `skills/<name>/SKILL.md` and the manifests sit beside it.
 
 ```
-dutch-skill/
+dutch-native/
 ├── skills/
 │   └── dutch-native/
 │       ├── SKILL.md                  # the rules, loads when the skill triggers
@@ -68,7 +68,7 @@ The repo is its own single-plugin marketplace on both sides, so there is nothing
 Claude Code:
 
 ```text
-/plugin marketplace add brunocous/dutch-skill
+/plugin marketplace add brunocous/dutch-native
 /plugin install dutch-native@dutch-native
 /reload-plugins
 ```
@@ -76,7 +76,7 @@ Claude Code:
 Codex CLI:
 
 ```bash
-codex plugin marketplace add brunocous/dutch-skill
+codex plugin marketplace add brunocous/dutch-native
 codex plugin add dutch-native@dutch-native
 ```
 
@@ -89,13 +89,13 @@ Invoke it as `/dutch-native` in Claude Code and `$dutch-native` in Codex, or let
 If you would rather not install a plugin, copy the skill folder into the directory your agent scans. Note that the skill is a *subdirectory* of the repo, so this is a clone followed by a copy:
 
 ```bash
-git clone --depth 1 https://github.com/brunocous/dutch-skill.git /tmp/dutch-skill
+git clone --depth 1 https://github.com/brunocous/dutch-native.git /tmp/dutch-native
 
 # Claude Code, personal
-cp -R /tmp/dutch-skill/skills/dutch-native ~/.claude/skills/
+cp -R /tmp/dutch-native/skills/dutch-native ~/.claude/skills/
 
 # Codex, personal. Note .agents/skills, not .codex/skills
-mkdir -p ~/.agents/skills && cp -R /tmp/dutch-skill/skills/dutch-native ~/.agents/skills/
+mkdir -p ~/.agents/skills && cp -R /tmp/dutch-native/skills/dutch-native ~/.agents/skills/
 ```
 
 For project scope, use `.claude/skills/` or `.agents/skills/` inside the repo that needs it, and commit the folder. Run `/skills` in either tool to confirm it loaded.
@@ -105,7 +105,7 @@ For project scope, use `.claude/skills/` or `.agents/skills/` inside the repo th
 Settings → Capabilities → Skills takes a zip. The folder itself must be at the zip root, not the loose files:
 
 ```bash
-git clone https://github.com/brunocous/dutch-skill.git dutch-native
+git clone https://github.com/brunocous/dutch-native.git dutch-native
 zip -r dutch-native.zip dutch-native -x '*.git*'
 ```
 
